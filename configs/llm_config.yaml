@@ -1,0 +1,137 @@
+# ============================================================
+# LLM 配置
+# 说明：DeepSeek API 调用参数、Prompt 模板、各 Agent 配置
+# ============================================================
+
+# ===== DeepSeek API 基础配置 =====
+deepseek:
+  # API 配置（敏感信息从 .env 读取）
+  base_url: "${DEEPSEEK_BASE_URL:-https://api.deepseek.com}"
+  api_key_env: "DEEPSEEK_API_KEY"
+  model: "${DEEPSEEK_MODEL:-deepseek-chat}"
+
+  # 默认调用参数
+  default_params:
+    temperature: 0.3      # 风控场景需要稳定输出，温度调低
+    max_tokens: 2000
+    top_p: 0.9
+    frequency_penalty: 0.0
+    presence_penalty: 0.0
+    timeout: 30
+
+  # 重试机制
+  retry:
+    max_attempts: 3
+    backoff_factor: 2     # 指数退避因子
+    initial_wait: 1
+    max_wait: 30
+
+  # 限流（每分钟请求数）
+  rate_limit:
+    enabled: true
+    requests_per_minute: 60
+
+# ===== Prompt 模板路径 =====
+prompts:
+  templates_dir: "./configs/prompts"
+
+  # 风险报告生成
+  risk_report:
+    template_file: "risk_report.j2"
+    system_role: |
+      你是一名资深的金融风控分析师，专长于个人信贷风险评估。
+      你需要基于机器学习模型的预测结果和 SHAP 特征贡献度，
+      为业务人员生成清晰、专业、可操作的风险评估报告。
+      报告要求：
+      1. 语言通俗易懂，避免使用过多技术术语
+      2. 重点突出关键风险因素和保护因素
+      3. 给出明确的审批建议
+      4. 包含必要的免责声明
+
+  # 特征工程建议
+  feature_suggestion:
+    template_file: "feature_suggestion.j2"
+    system_role: |
+      你是一名经验丰富的数据科学家，专长于金融领域的特征工程。
+      你需要基于数据字段说明和样本统计信息，
+      为风控建模提供专业的特征衍生建议。
+
+  # 异常案例分析
+  case_analysis:
+    template_file: "case_analysis.j2"
+    system_role: |
+      你是一名机器学习模型诊断专家。
+      你需要分析模型预测错误的样本，找出潜在原因并提供改进建议。
+
+  # 自由对话（智能助手）
+  chat_assistant:
+    template_file: "chat_assistant.j2"
+    system_role: |
+      你是"智能信贷风控分析系统"的 AI 助手。
+      你可以回答关于数据、模型、风控业务的各类问题。
+      回答要简洁、准确、有依据。如果不确定，请明确说明。
+
+  compliance_check:
+    template_file: "compliance_check.j2"
+    system_role: "你是银行合规审查员"
+
+# ===== Agent 行为配置 =====
+agents:
+
+  # 风险报告 Agent
+  report_agent:
+    enabled: true
+    top_n_features: 5         # 解释时使用的 Top N 特征
+    include_recommendations: true
+    output_format: "markdown"
+    streaming: false           # 是否流式输出
+
+  # 特征建议 Agent
+  feature_agent:
+    enabled: true
+    sample_size: 1000          # 发送给 LLM 的样本数
+    max_suggestions: 10
+    include_code: true         # 是否生成可执行代码
+
+  # 异常案例分析 Agent
+  case_agent:
+    enabled: true
+    max_cases: 20              # 单次分析的最大案例数
+    confidence_threshold: 0.85 # 高置信度但预测错误的案例
+
+  # 对话助手 Agent
+  chat_agent:
+    enabled: true
+    max_history_turns: 10      # 上下文最大对话轮数
+    streaming: true
+
+  compliance:
+    enabled: true
+    temperature: 0.1
+    max_tokens: 2000
+
+# ===== 安全与合规 =====
+safety:
+  # 敏感信息过滤
+  pii_filter:
+    enabled: true
+    fields_to_mask:
+      - "id"
+      - "postCode"
+      - "employmentTitle"
+      - "title"
+
+  # 内容安全
+  content_filter:
+    enabled: true
+    block_patterns:
+      - "API[_ ]?KEY"
+      - "password"
+      - "secret"
+
+  # 审计日志
+  audit_log:
+    enabled: true
+    log_file: "./logs/llm_audit.log"
+    log_request: true
+    log_response: false        # 响应可能很大，按需开启

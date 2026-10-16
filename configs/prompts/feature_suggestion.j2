@@ -1,0 +1,62 @@
+你是一位经验丰富的金融风控数据科学家。请基于以下数据集信息，为提升模型预测能力提供专业的特征工程建议。
+
+## 数据集背景
+- **场景**: 个人信贷违约预测
+- **当前数据源**: {{ source_name }}
+- **目标变量**: isDefault (1=违约, 0=正常)
+- **当前样本数**: {{ sample_size }}
+- **当前特征数**: {{ feature_count }}
+- **标签情况**: {{ target_summary }}
+- **已配置的衍生特征**: {{ existing_features | join(', ') if existing_features else '无' }}
+
+## 现有字段说明
+{% for field in fields %}
+- **{{ field.name }}** ({{ field.dtype }}): {{ field.description }}
+  - 可用值 {{ sample_size - field.missing_count }} 条，缺失率 {{ '%.1f' | format(field.missing_ratio * 100) }}%，唯一值 {{ field.unique_count }} 个
+  {% if field.stats %}- 统计：{{ field.stats }}{% endif %}
+{% endfor %}
+
+## 数据样本（前 5 行）
+```
+{{ data_sample }}
+```
+
+## 当前模型表现
+- 模型: {{ current_model }}
+- AUC: {{ current_auc }}
+- 主要瓶颈: {{ bottleneck if bottleneck else "未指定" }}
+
+## 输出要求
+
+请提供 **{{ max_suggestions }} 个**有助于提升模型表现的特征工程建议，每个建议包含：
+
+1. **特征名称**：建议的新特征名
+2. **业务含义**：从业务角度解释为什么这个特征有用
+3. **构造逻辑**：如何从现有字段计算
+4. **预期效果**：可能对哪类样本的预测有帮助
+5. **示例代码**：可执行的 Pandas 代码片段
+
+请按以下 JSON 格式输出，不要包含 markdown 代码块标记：
+
+```json
+{
+  "suggestions": [
+    {
+      "name": "monthly_burden_ratio",
+      "business_meaning": "月还款额占月收入的比例，反映还款压力",
+      "construction": "installment / (annualIncome / 12)",
+      "expected_impact": "对高负债压力客户的违约预测有帮助",
+      "code": "df['monthly_burden_ratio'] = df['installment'] / (df['annualIncome'] / 12 + 1)"
+    }
+  ],
+  "general_advice": "整体特征工程方向的建议..."
+}
+```
+
+注意：
+- 建议必须基于现有字段，不能凭空假设新数据来源
+- 不要重复“已配置的衍生特征”
+- 必须结合当前数据源的缺失率、可用标签和字段覆盖情况说明优先级
+- 优先考虑业务可解释性强的特征
+- 避免过度工程，保持简洁实用
+- “业务含义”和“预期效果”要使用面向信贷审批人员的简洁中文，避免只给技术术语

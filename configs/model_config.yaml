@@ -1,0 +1,171 @@
+# ============================================================
+# 模型配置
+# 说明：XGBoost、MLP、模型融合的所有超参均在此配置
+# ============================================================
+
+# ===== XGBoost 配置 =====
+xgboost:
+  enabled: true
+
+  # 基础超参
+  params:
+    objective: "binary:logistic"
+    eval_metric: "auc"
+    booster: "gbtree"
+    tree_method: "hist"
+    device: "cpu"  # 改为 'cuda' 启用 GPU
+
+    max_depth: 6
+    learning_rate: 0.05
+    n_estimators: 1000
+
+    min_child_weight: 1
+    gamma: 0
+    subsample: 0.8
+    colsample_bytree: 0.8
+
+    # 正则化
+    reg_alpha: 0.1
+    reg_lambda: 1.0
+
+    # 类别不平衡处理
+    scale_pos_weight: 4   # 负正样本比例（违约率约 20%）
+
+    random_state: 42
+    n_jobs: -1
+    verbosity: 1
+
+  # 早停
+  early_stopping:
+    enabled: true
+    rounds: 50
+
+  # 超参优化
+  tuning:
+    enabled: true
+    method: "optuna"      # optuna / grid / random
+    n_trials: 50
+    timeout: 1800         # 秒
+    direction: "maximize"
+    metric: "auc"
+
+    # 搜索空间
+    search_space:
+      max_depth:
+        type: "int"
+        low: 3
+        high: 10
+      learning_rate:
+        type: "float"
+        low: 0.01
+        high: 0.3
+        log: true
+      min_child_weight:
+        type: "int"
+        low: 1
+        high: 10
+      subsample:
+        type: "float"
+        low: 0.6
+        high: 1.0
+      colsample_bytree:
+        type: "float"
+        low: 0.6
+        high: 1.0
+      reg_alpha:
+        type: "float"
+        low: 1.0e-8
+        high: 10.0
+        log: true
+      reg_lambda:
+        type: "float"
+        low: 1.0e-8
+        high: 10.0
+        log: true
+
+# ===== MLP（多层感知器）配置 =====
+random_forest:
+  enabled: true
+  params:
+    n_estimators: 300
+    max_depth: null
+    min_samples_split: 2
+    min_samples_leaf: 1
+    class_weight: "balanced"
+    random_state: 42
+    n_jobs: -1
+
+# ===== MLP（多层感知器）配置 =====
+mlp:
+  enabled: true
+
+  # 网络结构
+  architecture:
+    hidden_layers: [256, 128, 64]
+    activation: "relu"          # relu / gelu / leaky_relu
+    dropout: 0.3
+    batch_norm: true
+    output_activation: "sigmoid"
+
+  # 训练参数
+  training:
+    batch_size: 512
+    epochs: 50
+    learning_rate: 0.001
+    weight_decay: 1.0e-5
+    optimizer: "adam"           # adam / adamw / sgd
+    scheduler: "cosine"         # cosine / step / plateau / none
+    loss: "bce"                 # bce / focal
+
+    # 类别加权
+    class_weight: "balanced"
+
+    # 早停
+    early_stopping:
+      enabled: true
+      patience: 5
+      min_delta: 0.0001
+
+  # 设备
+  device: "cpu"  # 改为 'cuda' 启用 GPU
+
+# ===== 模型融合 =====
+ensemble:
+  enabled: true
+  method: "weighted_avg"        # weighted_avg / stacking / voting
+
+  # 权重融合参数
+  weights:
+    xgboost: 0.6
+    mlp: 0.4
+
+  # Stacking 参数（method=stacking 时生效）
+  stacking:
+    meta_learner: "logistic_regression"
+    cv_folds: 5
+
+# ===== 评估配置 =====
+evaluation:
+  metrics:
+    - auc
+    - ks
+    - accuracy
+    - precision
+    - recall
+    - f1
+    - log_loss
+
+  # 阈值优化
+  threshold_optimization:
+    enabled: true
+    method: "youden"            # youden / f1 / fixed
+    fixed_value: 0.5
+
+# ===== 模型保存 =====
+persistence:
+  save_dir: "./data/models"
+  format:
+    xgboost: "json"             # json / ubj / pkl
+    random_forest: "joblib"
+    mlp: "pth"                  # pth / onnx
+  versioning: true              # 是否启用版本号

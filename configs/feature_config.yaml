@@ -1,0 +1,128 @@
+# ============================================================
+# 特征工程配置
+# 说明：缺失值处理、编码方式、衍生特征规则、特征筛选
+# ============================================================
+
+# ===== 缺失值处理 =====
+missing_value:
+  # 数值型缺失值处理策略：mean / median / zero / drop
+  numerical_strategy: "median"
+  # 类别型缺失值处理策略：mode / unknown / drop
+  categorical_strategy: "unknown"
+  # 缺失率阈值，超过此值的列将被丢弃
+  drop_threshold: 0.95
+  # 第 7.6 节：特定字段策略
+  strategy:
+    annualIncome: "median"
+    employmentLength: "mode"
+    dti: "knn"
+  knn_neighbors: 5
+
+# ===== 类别编码 =====
+encoding:
+  # 编码方式：label / onehot / target / woe
+  method: "label"
+
+  # 特定列的特殊编码规则
+  custom:
+    grade:
+      method: "label"
+      mapping:
+        A: 1
+        B: 2
+        C: 3
+        D: 4
+        E: 5
+        F: 6
+        G: 7
+
+    employmentLength:
+      method: "label"
+      mapping:
+        "< 1 year": 0
+        "1 year": 1
+        "2 years": 2
+        "3 years": 3
+        "4 years": 4
+        "5 years": 5
+        "6 years": 6
+        "7 years": 7
+        "8 years": 8
+        "9 years": 9
+        "10+ years": 10
+
+# ===== 数值型标准化 =====
+scaling:
+  # 标准化方法：standard / minmax / robust / none
+  method: "standard"
+  # 是否对每个特征单独缩放
+  per_feature: true
+
+# ===== 衍生特征 =====
+derived_features:
+  enabled: true
+  rules:
+    # 月收入
+    - name: "monthly_income"
+      formula: "annualIncome / 12"
+      description: "由年收入推算月收入"
+
+    # 月还款占月收入比
+    - name: "installment_to_income_ratio"
+      formula: "installment / (annualIncome / 12 + 1)"
+      description: "月还款额占月收入比例（防止除零）"
+
+    # FICO 评分均值
+    - name: "fico_avg"
+      formula: "(ficoRangeLow + ficoRangeHigh) / 2"
+      description: "FICO 评分均值"
+
+    # 贷款金额与年收入比
+    - name: "loan_to_income_ratio"
+      formula: "loanAmnt / (annualIncome + 1)"
+      description: "贷款金额占年收入比例"
+
+    # 信用额度利用率（区分大类）
+    - name: "revol_util_bucket"
+      formula: "pd.cut(df['revolUtil'], bins=[-1, 30, 60, 90, 200], labels=[0, 1, 2, 3])"
+      description: "信用利用率分桶"
+
+# ===== 时间特征处理 =====
+datetime_features:
+  issueDate:
+    extract:
+      - year
+      - month
+      - quarter
+      - is_year_end
+  earliesCreditLine:
+    extract:
+      - year
+      - credit_history_length  # 距 issueDate 的年数
+
+# ===== 异常值处理 =====
+outlier:
+  # 方法：iqr / zscore / clip / none
+  method: "clip"
+  # 截断分位数
+  lower_quantile: 0.01
+  upper_quantile: 0.99
+  # 仅对这些列应用
+  apply_to:
+    - annualIncome
+    - revolBal
+    - dti
+    - installment
+
+# ===== 特征筛选 =====
+feature_selection:
+  enabled: true
+  # 方法：variance / correlation / chi2 / mutual_info / model_based
+  methods:
+    - name: "variance"
+      threshold: 0.01
+    - name: "correlation"
+      threshold: 0.95   # 高相关特征剔除一个
+    - name: "model_based"
+      model: "xgboost"
+      top_k: 50         # 保留 Top 50 特征

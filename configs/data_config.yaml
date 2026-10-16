@@ -1,0 +1,101 @@
+# ============================================================
+# 数据配置
+# 说明：定义数据源路径、字段类型、数据集划分等
+# ============================================================
+
+# 数据集元信息
+dataset:
+  name: "天池零基础入门金融风控-贷款违约预测"
+  description: "基于某信贷平台贷款记录的违约预测数据集"
+  source_url: "https://tianchi.aliyun.com/competition/entrance/531830"
+  total_samples: 800000
+
+# 数据路径
+paths:
+  raw_dir: "./data/raw"
+  processed_dir: "./data/processed"
+  sample_dir: "./data/sample"
+  model_dir: "./data/models"
+
+  # 文件名
+  train_file: "train.csv"
+  test_file: "testA.csv"
+  sample_file: "sample.csv"
+
+# 标签列
+target_column: "isDefault"
+
+# ID 列（不参与建模）
+id_column: "id"
+
+# 字段类型分组
+columns:
+  # 数值型特征
+  numerical:
+    - loanAmnt           # 贷款金额
+    - term               # 贷款期限(年)
+    - interestRate       # 贷款利率
+    - installment        # 分期付款金额
+    - annualIncome       # 年收入
+    - dti                # 债务收入比
+    - delinquency_2years # 过去2年逾期次数
+    - ficoRangeLow       # FICO 评分下限（FICO是美国消费信贷信用分，300-850之间，分数越高违约风险越低。这个数据集没有真实FICO）
+    - ficoRangeHigh      # FICO 评分上限
+    - openAcc            # 未结信用额度数量
+    - pubRec             # 公开记录数
+    - pubRecBankruptcies # 破产记录数
+    - revolBal           # 循环余额
+    - revolUtil          # 循环额度利用率
+    - totalAcc           # 总信用额度数
+
+  # 类别型特征
+  categorical:
+    - grade              # 贷款等级
+    - subGrade           # 贷款等级子级
+    - employmentTitle    # 就业职称（脱敏）
+    - employmentLength   # 就业年限
+    - homeOwnership      # 房屋所有权状况
+    - verificationStatus # 验证状态
+    - purpose            # 贷款用途
+    - postCode           # 邮编（脱敏）
+    - regionCode         # 地区代码
+    - initialListStatus  # 初始上市状态
+    - applicationType    # 申请类型
+    - title              # 借款人提供的贷款名称（脱敏）
+    - policyCode         # 公开策略代码
+
+  # 时间型特征
+  datetime:
+    - issueDate          # 贷款发放月份
+    - earliesCreditLine  # 最早信用额度
+
+  # 匿名特征（n0-n14）
+  anonymous:
+    - n0
+    - n1
+    - n2
+    - n3
+    - n4
+    - n5
+    - n6
+    - n7
+    - n8
+    - n9
+    - n10
+    - n11
+    - n12
+    - n13
+    - n14
+
+# 数据集划分
+split:
+  test_size: 0.2
+  validation_size: 0.1
+  random_state: 42
+  stratify: true  # 按目标变量分层抽样
+
+# 数据加载选项
+loading:
+  chunk_size: 100000  # 分块读取大小（大文件场景）
+  encoding: "utf-8"
+  low_memory: false

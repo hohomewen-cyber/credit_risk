@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual Environments
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment & Secrets
+.env
+.env.local
+*.pem
+*.key
+
+# Data & Models
+data/processed/
+data/raw/*
+data/sample/*
+data/models/*
+*.csv
+*.parquet
+*.pkl
+*.joblib
+*.pth
+*.ckpt
+!data/README.md
+
+# 云端演示仅保留当前真实数据、示例数据和 latest 模型产物
+!data/raw/lending_club.csv
+!data/sample/sample.csv
+!data/models/latest/
+!data/models/latest/ensemble.json
+!data/models/latest/eval_results.json
+!data/models/latest/feature_selector.pkl
+!data/models/latest/meta.json
+!data/models/latest/mlp_model.pth
+!data/models/latest/preprocessor.pkl
+!data/models/latest/random_forest_model.joblib
+!data/models/latest/xgb_model.features.txt
+!data/models/latest/xgb_model.json
+
+# Logs
+logs/
+*.log
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_meta

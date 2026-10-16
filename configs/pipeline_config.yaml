@@ -1,0 +1,96 @@
+# ============================================================
+# 流程编排配置
+# 说明：定义训练/预测/解释的完整流程
+# ============================================================
+
+# ===== 全局配置 =====
+global:
+  experiment_name: "credit_risk_v1"
+  random_seed: 42
+  num_workers: 4
+  log_dir: "./logs"
+
+# ===== 训练流程 =====
+training_pipeline:
+  steps:
+    - name: "load_data"
+      module: "src.data.loader"
+      class: "DataLoader"
+      enabled: true
+
+    - name: "preprocess"
+      module: "src.data.preprocessor"
+      class: "Preprocessor"
+      enabled: true
+
+    - name: "feature_engineering"
+      module: "src.features.builder"
+      class: "FeatureBuilder"
+      enabled: true
+
+    - name: "feature_selection"
+      module: "src.features.selector"
+      class: "FeatureSelector"
+      enabled: true
+
+    - name: "split_data"
+      module: "src.data.loader"
+      class: "DataSplitter"
+      enabled: true
+
+    - name: "train_xgboost"
+      module: "src.models.xgb_model"
+      class: "XGBModel"
+      enabled: true
+
+    - name: "train_mlp"
+      module: "src.models.mlp_model"
+      class: "MLPModel"
+      enabled: true
+
+    - name: "ensemble"
+      module: "src.models.ensemble"
+      class: "EnsembleModel"
+      enabled: true
+
+    - name: "evaluate"
+      module: "src.utils.metrics"
+      class: "Evaluator"
+      enabled: true
+
+    - name: "explain"
+      module: "src.explain.shap_analyzer"
+      class: "SHAPAnalyzer"
+      enabled: true
+
+    - name: "save_artifacts"
+      module: "src.pipeline.orchestrator"
+      class: "ArtifactManager"
+      enabled: true
+
+# ===== 预测流程 =====
+inference_pipeline:
+  steps:
+    - name: "load_model"
+      enabled: true
+    - name: "preprocess_input"
+      enabled: true
+    - name: "predict"
+      enabled: true
+    - name: "explain_local"
+      enabled: true
+    - name: "generate_report"   # LLM 报告生成
+      enabled: true
+
+# ===== 输出配置 =====
+outputs:
+  predictions_path: "./data/predictions"
+  reports_path: "./data/reports"
+  metrics_path: "./data/metrics"
+  shap_path: "./data/shap"
+
+# ===== 实验追踪（可选） =====
+tracking:
+  enabled: false
+  backend: "mlflow"     # mlflow / wandb / none
+  experiment_uri: "sqlite:///./data/mlruns.db"

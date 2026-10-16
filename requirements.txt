@@ -1,0 +1,23 @@
+# Streamlit Community Cloud 运行依赖（保留原模型及 7.1～7.7 全部功能）
+numpy>=1.24,<3
+pandas>=2.0,<4
+scikit-learn>=1.3,<2
+scipy>=1.10,<2
+xgboost>=2.0,<4
+torch>=2.0,<3
+optuna>=3.4,<6
+shap>=0.43,<1
+matplotlib>=3.7,<4
+seaborn>=0.12,<1
+plotly>=5.17,<8
+streamlit>=1.30,<2
+streamlit-option-menu>=0.3.6,<1
+openai>=1.10,<4
+httpx>=0.25,<1
+tenacity>=8.2,<10
+pyyaml>=6.0,<7
+python-dotenv>=1.0,<2
+loguru>=0.7,<1
+joblib>=1.3,<2
+tqdm>=4.66,<5
+jinja2>=3.1,<4

@@ -1,0 +1,22 @@
+{# 政策合规检查 Prompt #}
+你是一名银行合规审查员，负责审查贷款审批是否符合监管要求。
+
+# 申请人信息
+{{ features | tojson(indent=2) }}
+
+# 审批结果
+- 决策：{{ decision }}
+- 利率：{{ interest_rate }}%
+
+# 监管要求
+{% for rule in rules %}
+- {{ rule }}
+{% endfor %}
+
+请逐条审查，输出 JSON：
+{
+  "is_compliant": bool,
+  "violations": [{"rule": "...", "reason": "..."}],
+  "warnings": ["..."],
+  "recommendations": ["..."]
+}
